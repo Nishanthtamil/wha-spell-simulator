@@ -1,8 +1,6 @@
-import { drawFireEffect } from "./effects/fireEffect.js";
-import { drawWaterEffect } from "./effects/waterEffect.js";
-import { drawWindEffect } from "./effects/windEffect.js";
-import { drawEarthEffect } from "./effects/earthEffect.js";
-import { drawLightEffect } from "./effects/lightEffect.js";
+import { resolveProfile } from './profileBlender.js';
+import { elementProfiles } from './elementProfiles.js';
+import { updateAndDrawParticles } from './particleSystem.js';
 import { resetParticleState } from "./effects/effectUtils.js";
 import { clamp } from "../utils/geometry.js";
 
@@ -25,14 +23,6 @@ const FAILED_FLICKER_LINE_WIDTH = 7;
 const FAILED_FLICKER_DASH = [10, 14];
 const FAILED_FLICKER_RADIUS_SCALE = 0.92;
 const FAILED_FLICKER_RADIUS_PULSE_SCALE = 0.02;
-
-const EFFECTS = {
-  fire: drawFireEffect,
-  water: drawWaterEffect,
-  wind: drawWindEffect,
-  earth: drawEarthEffect,
-  light: drawLightEffect
-};
 
 function spellDurationMs(spellIR) {
   const durationSeconds = Number(spellIR?.duration);
@@ -102,8 +92,8 @@ export class SpellEffectRenderer {
       return;
     }
 
-    const drawEffect = EFFECTS[spellIR.element];
-    if (!drawEffect) {
+    const profile = resolveProfile(spellIR, elementProfiles);
+    if (!profile) {
       return;
     }
 
@@ -115,7 +105,7 @@ export class SpellEffectRenderer {
     const renderSpellIR = { ...spellIR, emission };
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    drawEffect(ctx, this.state, renderSpellIR, ring, dt, this.config);
+    updateAndDrawParticles(ctx, this.state, renderSpellIR, ring, profile, dt, this.config);
     ctx.restore();
   }
 
